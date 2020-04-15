@@ -144,10 +144,10 @@ namespace ESTIME.DAL
             {
                 using (var trans = context.Database.BeginTransaction())
                 {
+                    DbCommand cmd = context.Database.GetDbConnection().CreateCommand();
                     try
                     {
                         //first insert metadata points
-                        DbCommand cmd = context.Database.GetDbConnection().CreateCommand();
                         cmd.CommandText = "ESTIME.usp_InsertLoadData_MetadataPoint";
                         cmd.CommandType = System.Data.CommandType.StoredProcedure;
                         cmd.CommandTimeout = 0;
@@ -213,6 +213,11 @@ namespace ESTIME.DAL
                     {
                         retVal = false;
                     }
+                    finally
+                    {
+                        cmd.Connection.Close();
+                        trans.Commit();
+                    }
                 }
             }
             return retVal;
@@ -261,7 +266,6 @@ namespace ESTIME.DAL
 
                         cmd.Connection.Open();
                         cmd.ExecuteNonQuery();
-                        cmd.Connection.Close();
 
                         retVal = (int)success.Value == 0 ? true : false;
                     }
@@ -275,9 +279,9 @@ namespace ESTIME.DAL
                         cmd.Connection.Close();
                         trans.Commit();
                     }
-                    return retVal;
                 }
             }
+            return retVal;
         }
         public bool LoadTextDataFileByBulk(int loadId, int refPeriodId)
         {
@@ -329,9 +333,8 @@ namespace ESTIME.DAL
                 {
                     cmd.Connection.Close();
                 }
-                return retVal;
             }
+            return retVal;
         }
-
     }
 }
