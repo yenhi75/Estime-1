@@ -1,13 +1,18 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 15
-VisualStudioVersion = 15.0.28010.2041
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.29306.81
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ESTIME.BusinessLibrary", "ESTIME.BusinessLibrary\ESTIME.BusinessLibrary.csproj", "{B3F9A558-E580-49B6-A1EC-2AE298ED8959}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ESTIME.DAL", "ESTIME.DAL\ESTIME.DAL.csproj", "{DA8D36A9-E720-48E4-8C14-D63FB6058082}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ESTIME.RESTfulAPI", "ESTIME.RESTfulAPI\ESTIME.RESTfulAPI.csproj", "{96CB4297-CEB5-4D3A-8A8F-8D6153D1B6CF}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Scripts", "Scripts", "{1E1C1F29-9D48-47A0-B100-449464DB7A9B}"
+	ProjectSection(SolutionItems) = preProject
+		..\..\..\..\Downloads\Database.sql = ..\..\..\..\Downloads\Database.sql
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
