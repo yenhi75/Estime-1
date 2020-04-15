@@ -99,7 +99,7 @@ BEGIN TRY
 			VarValue
 		)
 		SELECT lt.RecordId, iv.InputVarId, iv.VarCode, SUBSTRING(lt.RecordValue, iv.VarPos, iv.VarLenght)
-		FROM dbo.td_EstimeLoadStaging lt
+		FROM ESTIME.td_LoadStaging lt
 		CROSS JOIN @InputVar iv
 		WHERE lt.LoadId = @LoadId;
 	END
