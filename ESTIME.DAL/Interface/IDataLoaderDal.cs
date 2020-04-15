@@ -16,7 +16,8 @@ namespace ESTIME.DAL.Interface
         TdLoad AddTdLoad(TdLoad newLoad);
         void UpdateTdLoad(TdLoad curLoad);
         IEnumerable<TlInputCoordinate> GetInputCoordinateListByEstimeFileType(int estimeFileTypeId);
-        bool LoadTextDataFile(int loadId, int refPeriodId);
+        bool LoadTextDataFileByBulk(int loadId, int refPeriodId);
+        bool AddTdLoadStaging(int loadId, int refPeriodId, List<TdLoadStaging> newLoadStaging);
         bool AddTdLoadData(int loadId, int refPeriodId, List<TdLoadData>myData);
 
     }

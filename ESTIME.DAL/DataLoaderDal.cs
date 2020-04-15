@@ -217,14 +217,16 @@ namespace ESTIME.DAL
             }
             return retVal;
         }
-        public bool LoadTextDataFile(int loadId, int refPeriodId)
+        public bool AddTdLoadStaging(int loadId, int refPeriodId, List<TdLoadStaging> newLoadStaging)
         {
             bool retVal = false;
             using (var context = new EstimeContext(connString))
             {
+
+                // Please add code to write 
                 var cmd = context.Database.GetDbConnection().CreateCommand();
 
-                cmd.CommandText = "ESTIME.usp_LoadTxtDataFile";
+                cmd.CommandText = "ESTIME.usp_ProcessLoadStagingData";
                 cmd.CommandType = System.Data.CommandType.StoredProcedure;
                 cmd.CommandTimeout = 0;
 
@@ -239,24 +241,60 @@ namespace ESTIME.DAL
                 rpId.Value = refPeriodId;
                 cmd.Parameters.Add(rpId);
 
-                //DataTable paramTable = new DataTable();
-                //paramTable.Columns.Add("Val1", typeof(string));
-                //paramTable.Columns.Add("Val2", typeof(string));
-                //DataRow row;
+                //output parameters
+                DbParameter success = cmd.CreateParameter();
+                success.ParameterName = "@SuccessCode";
+                success.Direction = System.Data.ParameterDirection.Output;
+                success.DbType = System.Data.DbType.Int32;
+                cmd.Parameters.Add(success);
 
-                //foreach (KeyValuePair<string, string> val in paramVals)
-                //{
-                //    row = paramTable.NewRow();
-                //    row["Val1"] = val.Key;
-                //    row["Val2"] = val.Value;
-                //    paramTable.Rows.Add(row);
-                //}
-                //SqlParameter valPairParam = new SqlParameter("@ParamVarValue", SqlDbType.Structured)
-                //{
-                //    Value = paramTable,
-                //    TypeName = "ESTIME.ValuePair"
-                //};
-                //cmd.Parameters.Add(valPairParam);
+                DbParameter errMessage = cmd.CreateParameter();
+                errMessage.ParameterName = "@ErrorExceptionMessage";
+                errMessage.Direction = System.Data.ParameterDirection.Output;
+                errMessage.DbType = System.Data.DbType.String;
+                errMessage.Size = 50000;
+                cmd.Parameters.Add(errMessage);
+
+                cmd.Connection.Open();
+                try
+                {
+                    context.TdLoadStaging.AddRange(newLoadStaging);
+                    cmd.ExecuteNonQuery();
+                    retVal = (int)success.Value == 0 ? true : false;
+                }
+                catch (Exception ex)
+                {
+                    retVal = false;
+                }
+                finally
+                {
+                    cmd.Connection.Close();
+                }
+                return retVal;
+            }
+        }
+
+        public bool LoadTextDataFileByBulk(int loadId, int refPeriodId)
+        {
+            bool retVal = false;
+            using (var context = new EstimeContext(connString))
+            {
+                var cmd = context.Database.GetDbConnection().CreateCommand();
+
+                cmd.CommandText = "ESTIME.usp_BulkLoadTextFile";
+                cmd.CommandType = System.Data.CommandType.StoredProcedure;
+                cmd.CommandTimeout = 0;
+
+                //Add parameters
+                DbParameter ldId = cmd.CreateParameter();
+                ldId.ParameterName = "@LoadId";
+                ldId.Value = loadId;
+                cmd.Parameters.Add(ldId);
+
+                DbParameter rpId = cmd.CreateParameter();
+                rpId.ParameterName = "@RefPeriodId";
+                rpId.Value = refPeriodId;
+                cmd.Parameters.Add(rpId);
 
                 //output parameters
                 DbParameter success = cmd.CreateParameter();
@@ -289,7 +327,6 @@ namespace ESTIME.DAL
                 return retVal;
             }
         }
-
 
     }
 }
