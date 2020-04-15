@@ -222,58 +222,63 @@ namespace ESTIME.DAL
             bool retVal = false;
             using (var context = new EstimeContext(connString))
             {
-
-                // Please add code to write 
-                var cmd = context.Database.GetDbConnection().CreateCommand();
-
-                cmd.CommandText = "ESTIME.usp_ProcessLoadStagingData";
-                cmd.CommandType = System.Data.CommandType.StoredProcedure;
-                cmd.CommandTimeout = 0;
-
-                //Add parameters
-                DbParameter ldId = cmd.CreateParameter();
-                ldId.ParameterName = "@LoadId";
-                ldId.Value = loadId;
-                cmd.Parameters.Add(ldId);
-
-                DbParameter rpId = cmd.CreateParameter();
-                rpId.ParameterName = "@RefPeriodId";
-                rpId.Value = refPeriodId;
-                cmd.Parameters.Add(rpId);
-
-                //output parameters
-                DbParameter success = cmd.CreateParameter();
-                success.ParameterName = "@SuccessCode";
-                success.Direction = System.Data.ParameterDirection.Output;
-                success.DbType = System.Data.DbType.Int32;
-                cmd.Parameters.Add(success);
-
-                DbParameter errMessage = cmd.CreateParameter();
-                errMessage.ParameterName = "@ErrorExceptionMessage";
-                errMessage.Direction = System.Data.ParameterDirection.Output;
-                errMessage.DbType = System.Data.DbType.String;
-                errMessage.Size = 50000;
-                cmd.Parameters.Add(errMessage);
-
-                cmd.Connection.Open();
-                try
+                using (var trans = context.Database.BeginTransaction())
                 {
-                    context.TdLoadStaging.AddRange(newLoadStaging);
-                    cmd.ExecuteNonQuery();
-                    retVal = (int)success.Value == 0 ? true : false;
+                    var cmd = context.Database.GetDbConnection().CreateCommand();
+                    try
+                    {
+                        cmd.CommandText = "ESTIME.usp_ProcessLoadStagingData";
+                        cmd.CommandType = System.Data.CommandType.StoredProcedure;
+                        cmd.CommandTimeout = 0;
+
+                        //Add parameters
+                        DbParameter ldId = cmd.CreateParameter();
+                        ldId.ParameterName = "@LoadId";
+                        ldId.Value = loadId;
+                        cmd.Parameters.Add(ldId);
+
+                        DbParameter rpId = cmd.CreateParameter();
+                        rpId.ParameterName = "@RefPeriodId";
+                        rpId.Value = refPeriodId;
+                        cmd.Parameters.Add(rpId);
+
+                        //output parameters
+                        DbParameter success = cmd.CreateParameter();
+                        success.ParameterName = "@SuccessCode";
+                        success.Direction = System.Data.ParameterDirection.Output;
+                        success.DbType = System.Data.DbType.Int32;
+                        cmd.Parameters.Add(success);
+
+                        DbParameter errMessage = cmd.CreateParameter();
+                        errMessage.ParameterName = "@ErrorExceptionMessage";
+                        errMessage.Direction = System.Data.ParameterDirection.Output;
+                        errMessage.DbType = System.Data.DbType.String;
+                        errMessage.Size = 50000;
+                        cmd.Parameters.Add(errMessage);
+
+                        context.TdLoadStaging.AddRange(newLoadStaging);
+                        context.SaveChanges();
+
+                        cmd.Connection.Open();
+                        cmd.ExecuteNonQuery();
+                        cmd.Connection.Close();
+
+                        retVal = (int)success.Value == 0 ? true : false;
+                    }
+                    catch (Exception ex)
+                    {
+                        trans.Rollback();
+                        retVal = false;
+                    }
+                    finally
+                    {
+                        cmd.Connection.Close();
+                        trans.Commit();
+                    }
+                    return retVal;
                 }
-                catch (Exception ex)
-                {
-                    retVal = false;
-                }
-                finally
-                {
-                    cmd.Connection.Close();
-                }
-                return retVal;
             }
         }
-
         public bool LoadTextDataFileByBulk(int loadId, int refPeriodId)
         {
             bool retVal = false;

@@ -101,6 +101,11 @@ namespace ESTIME.BusinessLibrary
                 {
                     //loading text file
                     loadSuccess = dal.LoadTextDataFileByBulk(curLoad.Id, refPeriodId);
+
+                    //new code to construct the loadStagings list from the text file
+                    //To test, comment the call above and uncomment the code below
+                    //List<TdLoadStaging> loadStagings = new List<TdLoadStaging>();
+                    //loadSuccess = dal.AddTdLoadStaging(curLoad.Id, refPeriodId, loadStagings);
                 }
                 else if (estimeFileType.FileType.Extension == ".xlsx")
                 {
