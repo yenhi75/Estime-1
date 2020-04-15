@@ -100,7 +100,7 @@ namespace ESTIME.BusinessLibrary
                 if (estimeFileType.FileType.Extension == ".txt" || estimeFileType.FileType.Extension == ".csv")
                 {
                     //loading text file
-                    loadSuccess = dal.LoadTextDataFile(curLoad.Id, refPeriodId);
+                    loadSuccess = dal.LoadTextDataFileByBulk(curLoad.Id, refPeriodId);
                 }
                 else if (estimeFileType.FileType.Extension == ".xlsx")
                 {
