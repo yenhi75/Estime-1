@@ -178,25 +178,25 @@ BEGIN TRY
 		FROM ESTIME.tl_InputVariable iv
 		INNER JOIN ESTIME.tl_Variable v
 		ON v.Id = iv.VariableId AND v.Code = 'PROV'
-		WHERE iv.EstimeFileTypeId = 1;
+		WHERE iv.EstimeFileTypeId = @EstimeFileTypeId;
 		                
 		SELECT @SexVarId  = iv.Id
 		FROM ESTIME.tl_InputVariable iv
 		INNER JOIN ESTIME.tl_Variable v
 		ON v.Id = iv.VariableId AND v.Code = 'SEX'
-		WHERE iv.EstimeFileTypeId = 1;
+		WHERE iv.EstimeFileTypeId = @EstimeFileTypeId;
 
 		SELECT @AgeVarId = iv.Id
 		FROM ESTIME.tl_InputVariable iv
 		INNER JOIN ESTIME.tl_Variable v
 		ON v.Id = iv.VariableId AND v.Code = 'Age'
-		WHERE iv.EstimeFileTypeId = 1;
+		WHERE iv.EstimeFileTypeId = @EstimeFileTypeId;
 
 		SELECT @RecordValueVarId = iv.Id
 		FROM ESTIME.tl_InputVariable iv
 		INNER JOIN ESTIME.tl_Variable v
 		ON v.Id = iv.VariableId AND v.Code = 'RECORDVALUE'
-		WHERE iv.EstimeFileTypeId = 1;
+		WHERE iv.EstimeFileTypeId = @EstimeFileTypeId;
 
 		DECLARE @TempFat TABLE(RecordId INT, RefPeriodCode VARCHAR(10), ProvValue VARCHAR(10), SexValue VARCHAR(10), AgeValue VARCHAR(10), RecordValue VARCHAR(10))
 
