@@ -121,6 +121,9 @@ namespace ESTIME.DAL
         public IEnumerable<TlInputCoordinate> GetInputCoordinateListByEstimeFileType(int estFileTypeId)
         {
             IQueryable<TlInputCoordinate> coors = null;
+            List<TlInputCoordinate> myList = new List<TlInputCoordinate>();
+
+
 
             using (var context = new EstimeContext(options, connString))
             {
@@ -132,10 +135,10 @@ namespace ESTIME.DAL
                              where iv.EstimeFileTypeId == estFileTypeId
                              select ic);
                 });
+                myList = coors.ToList();
             }
-            return coors;
+            return myList;
         }
-
         public bool AddTdLoadData(int loadId, int refPeriodId, List<TdLoadData> newLoadData)
         {
             bool retVal = false;

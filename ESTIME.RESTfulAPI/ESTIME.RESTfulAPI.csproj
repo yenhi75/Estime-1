@@ -14,10 +14,4 @@
     <ProjectReference Include="..\ESTIME.BusinessLibrary\ESTIME.BusinessLibrary.csproj" />
   </ItemGroup>
 
-  <ItemGroup>
-    <Reference Include="Interop.Excel">
-      <HintPath>U:\Interop.Excel.dll</HintPath>
-    </Reference>
-  </ItemGroup>
-
 </Project>
