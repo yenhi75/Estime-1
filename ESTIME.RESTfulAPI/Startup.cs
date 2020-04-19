@@ -12,6 +12,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Microsoft.EntityFrameworkCore;
 using ESTIME.BusinessLibrary;
+using System.Text;
 
 namespace ESTIME.RESTfulAPI
 {
@@ -38,6 +39,9 @@ namespace ESTIME.RESTfulAPI
             //Add business managers
             services.AddTransient<CodeSetManager>();
             services.AddTransient<DataLoaderManager>();
+
+            //register text encoder (for Excel reading)
+            Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
 
             services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_1);
         }

@@ -9,6 +9,11 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ESTIME.DAL", "ESTIME.DAL\ES
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ESTIME.RESTfulAPI", "ESTIME.RESTfulAPI\ESTIME.RESTfulAPI.csproj", "{96CB4297-CEB5-4D3A-8A8F-8D6153D1B6CF}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Scripts", "Scripts", "{DC662ADB-A743-4C51-ABFC-9592F8EE4D79}"
+	ProjectSection(SolutionItems) = preProject
+		..\..\..\..\Downloads\Database.sql = ..\..\..\..\Downloads\Database.sql
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU

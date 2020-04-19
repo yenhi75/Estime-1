@@ -147,44 +147,80 @@ namespace ESTIME.DAL
             {
                 using (var trans = context.Database.BeginTransaction())
                 {
-                    //Add parameters for the stored proc
-                    SqlParameter loadIdParam = new SqlParameter("@LoadId", SqlDbType.Int)
-                    {
-                        Value = loadId
-                    };
-
-                    SqlParameter refPeriodIdParam = new SqlParameter("@RefPeriodId", SqlDbType.Int)
-                    {
-                        Value = refPeriodId
-                    };
-
-                    SqlParameter successParam = new SqlParameter("@SuccessCode", SqlDbType.Int)
-                    {
-                        Direction = ParameterDirection.Output
-                    };
-
-                    SqlParameter errorMessageParam = new SqlParameter("@ErrorExceptionMessage", SqlDbType.NVarChar)
-                    {
-                        Size = 50000,
-                        Direction = ParameterDirection.Output
-                    };
-
-                    SqlParameter[] parameters = new SqlParameter[] { loadIdParam, refPeriodIdParam, successParam, errorMessageParam };
-
+                    DbCommand cmd = context.Database.GetDbConnection().CreateCommand();
                     try
                     {
-                        context.Database.ExecuteSqlCommand("ESTIME.usp_InsertLoadData_MetadataPoint @LoadId, @RefPeriodId, @SuccessCode OUTPUT, @ErrorExceptionMessage OUTPUT", parameters);
+                        //first insert metadata points
+                        cmd.CommandText = "ESTIME.usp_InsertLoadData_MetadataPoint";
+                        cmd.CommandType = System.Data.CommandType.StoredProcedure;
+                        cmd.CommandTimeout = 0;
 
-                        retVal = Convert.ToInt32(successParam.Value) == 0 ? true : false;
+                        //Add parameters
+                        DbParameter ldId = cmd.CreateParameter();
+                        ldId.ParameterName = "@LoadId";
+                        ldId.Value = loadId;
+                        cmd.Parameters.Add(ldId);
 
-                        context.TdLoadData.AddRange(newLoadData);
-                        context.SaveChanges();
+                        DbParameter rpId = cmd.CreateParameter();
+                        rpId.ParameterName = "@RefPeriodId";
+                        rpId.Value = refPeriodId;
+                        cmd.Parameters.Add(rpId);
+
+                        //DataTable paramTable = new DataTable();
+                        //paramTable.Columns.Add("Val1", typeof(string));
+                        //paramTable.Columns.Add("Val2", typeof(string));
+                        //DataRow row;
+
+                        //foreach (KeyValuePair<string, string> val in paramVals)
+                        //{
+                        //    row = paramTable.NewRow();
+                        //    row["Val1"] = val.Key;
+                        //    row["Val2"] = val.Value;
+                        //    paramTable.Rows.Add(row);
+                        //}
+                        //SqlParameter valPairParam = new SqlParameter("@ParamVarValue", SqlDbType.Structured)
+                        //{
+                        //    Value = paramTable,
+                        //    TypeName = "ESTIME.ValuePair"
+                        //};
+                        //cmd.Parameters.Add(valPairParam);
+
+                        //output parameters
+                        DbParameter success = cmd.CreateParameter();
+                        success.ParameterName = "@SuccessCode";
+                        success.Direction = System.Data.ParameterDirection.Output;
+                        success.DbType = System.Data.DbType.Int32;
+                        cmd.Parameters.Add(success);
+
+                        DbParameter errMessage = cmd.CreateParameter();
+                        errMessage.ParameterName = "@ErrorExceptionMessage";
+                        errMessage.Direction = System.Data.ParameterDirection.Output;
+                        errMessage.DbType = System.Data.DbType.String;
+                        errMessage.Size = 50000;
+                        cmd.Parameters.Add(errMessage);
+
+                        if (cmd.Connection.State != ConnectionState.Open)
+                        { cmd.Connection.Open(); }
+                        cmd.ExecuteNonQuery();
+                        cmd.Connection.Close();
+
+                        bool spRet = (bool)success.Value;
+
+                        if (spRet)
+                        {
+                            context.TdLoadData.AddRange(newLoadData);
+                            context.SaveChanges();
+                        }
                         trans.Commit();
                     }
                     catch (Exception ex)
                     {
                         retVal = false;
-                        trans.Rollback();
+                    }
+                    finally
+                    {
+                        cmd.Connection.Close();
+                        trans.Commit();
                     }
                 }
             }
@@ -197,44 +233,55 @@ namespace ESTIME.DAL
             {
                 using (var trans = context.Database.BeginTransaction())
                 {
-                    //Add parameters for the stored proc
-                    SqlParameter loadIdParam = new SqlParameter("@LoadId", SqlDbType.Int)
-                    {
-                        Value = loadId
-                    };
-
-                    SqlParameter refPeriodIdParam = new SqlParameter("@RefPeriodId", SqlDbType.Int)
-                    {
-                        Value = refPeriodId
-                    };
-
-                    SqlParameter successParam = new SqlParameter("@SuccessCode", SqlDbType.Int)
-                    {
-                        Direction = ParameterDirection.Output
-                    };
-
-                    SqlParameter errorMessageParam = new SqlParameter("@ErrorExceptionMessage", SqlDbType.NVarChar)
-                    {
-                        Size = 50000,
-                        Direction = ParameterDirection.Output
-                    };
-
-                    SqlParameter[] parameters = new SqlParameter[] { loadIdParam, refPeriodIdParam, successParam, errorMessageParam };
-
+                    var cmd = context.Database.GetDbConnection().CreateCommand();
                     try
                     {
+                        cmd.CommandText = "ESTIME.usp_ProcessLoadStagingData";
+                        cmd.CommandType = System.Data.CommandType.StoredProcedure;
+                        cmd.CommandTimeout = 0;
+
+                        //Add parameters
+                        DbParameter ldId = cmd.CreateParameter();
+                        ldId.ParameterName = "@LoadId";
+                        ldId.Value = loadId;
+                        cmd.Parameters.Add(ldId);
+
+                        DbParameter rpId = cmd.CreateParameter();
+                        rpId.ParameterName = "@RefPeriodId";
+                        rpId.Value = refPeriodId;
+                        cmd.Parameters.Add(rpId);
+
+                        //output parameters
+                        DbParameter success = cmd.CreateParameter();
+                        success.ParameterName = "@SuccessCode";
+                        success.Direction = System.Data.ParameterDirection.Output;
+                        success.DbType = System.Data.DbType.Int32;
+                        cmd.Parameters.Add(success);
+
+                        DbParameter errMessage = cmd.CreateParameter();
+                        errMessage.ParameterName = "@ErrorExceptionMessage";
+                        errMessage.Direction = System.Data.ParameterDirection.Output;
+                        errMessage.DbType = System.Data.DbType.String;
+                        errMessage.Size = 50000;
+                        cmd.Parameters.Add(errMessage);
+
                         context.TdLoadStaging.AddRange(newLoadStaging);
                         context.SaveChanges();
 
-                        context.Database.ExecuteSqlCommand("ESTIME.usp_ProcessLoadStagingData @LoadId, @RefPeriodId, @SuccessCode OUTPUT, @ErrorExceptionMessage OUTPUT", parameters);
-                        retVal = Convert.ToInt32(successParam.Value) == 0 ? true : false;
+                        cmd.Connection.Open();
+                        cmd.ExecuteNonQuery();
 
-                        trans.Commit();
+                        retVal = (int)success.Value == 0 ? true : false;
                     }
                     catch (Exception ex)
                     {
-                        retVal = false;
                         trans.Rollback();
+                        retVal = false;
+                    }
+                    finally
+                    {
+                        cmd.Connection.Close();
+                        trans.Commit();
                     }
                 }
             }

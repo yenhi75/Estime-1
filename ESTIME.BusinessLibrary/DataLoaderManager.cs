@@ -3,12 +3,10 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using Microsoft.Extensions.Configuration;
-//using Excel = Microsoft.Office.Interop.Excel;
-
 using ESTIME.DAL.Interface;
 using ESTIME.DAL;
 using ESTIME.DAL.EstimeEntity;
-
+using OfficeOpenXml;
 
 namespace ESTIME.BusinessLibrary
 /******************************************************
@@ -22,55 +20,20 @@ namespace ESTIME.BusinessLibrary
     public class DataLoaderManager : ManagerBase
     {
         protected readonly IDataLoaderDal dal;
-
-
-        //private static string filePath;
-        ////private static int fileType;
-        //private string output;
-        //private StreamWriter outputStream;
-
-        //private int estimeFileTypeId;
         private TlEstimeFileType estimeFileType;
-        private int refPeriodId;
+        private int refPeriodId =0;//temp, change
         private TdLoad curLoad;
-        int ws;
+        ExcelPackage ws;
         private bool loadSuccess;
         private string loadErr = string.Empty;
 
         public DataLoaderManager(IConfiguration config)
-            : base(config)
+            : 
+            base(config)
         {
             dal = new DataLoaderDal(connectionString);
         }
         public DataLoaderManager() : base() { }
-
-        //public DataLoadManager(string filePath, int fileType)
-        //{
-        //    DataLoadManage.filePath = filePath;
-        //    DataLoadManage.fileType = fileType;
-
-        //}
-
-        //public void InterprovincialMigrationSubTable(Excel.Worksheet ws, string tableName, string tableSubpart)
-        //{
-        //    short intStart=1;
-        //    short intCol;
-        //    short line, dataLineStart, dataLineEnd, provFromId, provToId;
-        //    string prov;
-
-        //    //Inter
-        //    //ws.Cells.Text;
-
-        //    for (int i =1; i< ws.Cells.SpecialCells(Excel.XlCellType.xlCellTypeLastCell).Row; i++)
-        //    {
-        //        //Excel.Range r = ws.Cells[intStart, 1];
-
-
-        //        //if (ws.Cells[intStart, 1].te= "K"){ }
-
-
-        //    }
-        //}
 
         public long StartLoading(string refPeriodCode, string estimeFileTypeCode, string fileName, string userName)
         {
@@ -88,35 +51,38 @@ namespace ESTIME.BusinessLibrary
             };
             curLoad = dal.AddTdLoad(newLoad);
 
-            //Extract worksheet
+            TryLoadData(fileName);
 
             return curLoad.Id;
+
+
         }
 
-        public bool TryLoadData()
+        public bool TryLoadData(string filePath)
         {
             try
             {
-                if (estimeFileType.FileType.Extension == ".txt" || estimeFileType.FileType.Extension == ".csv")
-                {
+                //estimeFileType = dal.GetEstimeFileTypeId("3");
+                //if (estimeFileType.FileType.Extension == ".txt" || estimeFileType.FileType.Extension == ".csv")
+                //{
                     //loading text file
-                    loadSuccess = dal.LoadTextDataFileByBulk(curLoad.Id, refPeriodId);
+                    //loadSuccess = dal.LoadTextDataFileByBulk(curLoad.Id, refPeriodId);
 
                     //new code to construct the loadStagings list from the text file
                     //To test, comment the call above and uncomment the code below
                     //List<TdLoadStaging> loadStagings = new List<TdLoadStaging>();
                     //loadSuccess = dal.AddTdLoadStaging(curLoad.Id, refPeriodId, loadStagings);
-                }
-                else if (estimeFileType.FileType.Extension == ".xlsx")
-                {
-                    //loading exel file
-                    if (ws == null)
-                    {
-                        loadErr = "Empty Worksheet!";
-                        loadSuccess = false;
-                    }
-                    else
-                    {
+                //}
+                //else if (estimeFileType.FileType.Extension == ".xlsx")
+                //{
+                    //loading excel file
+                    //if (ws == null)
+                    //{
+                        //loadErr = "Empty Worksheet!";
+                        //loadSuccess = false;
+                    //}
+                    //else
+                    //{
 
                         List<TlInputCoordinate> inputCoordinates = dal.GetInputCoordinateListByEstimeFileType(estimeFileType.Id).ToList();
 
@@ -124,10 +90,44 @@ namespace ESTIME.BusinessLibrary
                         List<TdLoadData> myData = new List<TdLoadData>();
 
 
-                        //Add new data and save to database
-                       loadSuccess = dal.AddTdLoadData(curLoad.Id, refPeriodId, myData);
-                    }
+                var fi = new FileInfo(filePath);
+                //var fi = new FileInfo(@"C:\Users\Claire\Desktop\ESTIME\test.xlsx");
+                using (ws = new ExcelPackage(fi))
+                {
+                    var sheet = ws.Workbook.Worksheets[1];
+                    inputCoordinates.ForEach(delegate (TlInputCoordinate coord)
+                                    {
+                                        int rowNum = coord.RowNumber ?? -1;
+
+                                       
+
+                                        int colNum = coord.ColumnNumber;
+
+                                        String val = sheet.Cells[rowNum, colNum].Value.ToString();
+
+                                        myData.Add(new TdLoadData(curLoad.Id, coord.RecordNumber, coord.InputVariableId,
+                                            refPeriodId, val));
+
+                                        //Console.WriteLine(coord);
+                                    });
+
+
+                    //[h, 8]
+                    var v = sheet.Cells[10, 8].Value;
+
+                    //dal.AddTdLoadData(curLoad.Id, refPeriodId, myData);
+
                 }
+
+
+
+
+
+
+                //Add new data and save to database
+                loadSuccess = dal.AddTdLoadData(curLoad.Id, refPeriodId, myData);
+                    //}
+                //}
                 return loadSuccess;
             }
             catch (Exception e)

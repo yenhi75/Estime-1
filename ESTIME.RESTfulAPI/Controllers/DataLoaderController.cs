@@ -5,6 +5,8 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using ESTIME.BusinessLibrary;
+using System.IO;
+using OfficeOpenXml;
 
 namespace ESTIME.RESTfulAPI.Controllers
 {
@@ -13,7 +15,8 @@ namespace ESTIME.RESTfulAPI.Controllers
     public class DataLoaderController : ControllerBase
     {
         private DataLoaderManager dataLoaderManager;
-        private const string filePath = "\\\\fld5filer\\TransSurfaceIM\\Systems\\SystemDocs\\EstimeLoaderInputFiles\\";
+        //private const string filePath = "\\\\fld5filer\\TransSurfaceIM\\Systems\\SystemDocs\\EstimeLoaderInputFiles\\";
+        private const string filePath = "C:\\Users\\Claire\\Desktop\\ESTIME\\"; //temporary
         public DataLoaderController(DataLoaderManager manager)
         {
             //this.config = config;
@@ -33,15 +36,29 @@ namespace ESTIME.RESTfulAPI.Controllers
 
             dataLoaderManager.StartLoading(refPeriod, estimeFileTypeCode, fileName, userId);
 
-            dataLoaderManager.TryLoadData();
+            //dataLoaderManager.TryLoadData(@"C:\Users\Claire\Desktop\ESTIME\test.xlsx");
         }
         [HttpGet("Loading")]
         public void Loading()
         {
-            dataLoaderManager.TryLoadData();
+            dataLoaderManager.TryLoadData(@"C:\Users\Claire\Desktop\ESTIME\test.xlsx");
 
             //ESTIME.DAL.DataLoaderDal dataLoader = new DAL.DataLoaderDal("server=EETSDFTSDEV;database=EETSD_FTS_D;Integrated Security=True");
             //dataLoader.LoadDataFileOld("test", userId);
+        }
+
+        [HttpGet("ReadFile", Name = "ReadFile")]
+        public void ReadFile()
+        {
+
+            var fi = new FileInfo(@"C:\Users\Claire\Desktop\ESTIME\test.xlsx");
+            using (var p = new ExcelPackage(fi))
+            {
+                var ws = p.Workbook.Worksheets[1];
+                //[h, 8]
+                var v = ws.Cells[10, 8].Value;
+
+            }
         }
 
     }
