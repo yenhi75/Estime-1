@@ -8,6 +8,7 @@ using ESTIME.DAL.Interface;
 using ESTIME.DAL.EstimeEntity;
 using System.Data;
 using System.Data.SqlClient;
+using Microsoft.EntityFrameworkCore.Storage;
 
 namespace ESTIME.DAL
 {
@@ -141,13 +142,15 @@ namespace ESTIME.DAL
         }
         public bool AddTdLoadData(int loadId, int refPeriodId, List<TdLoadData> newLoadData)
         {
-            bool retVal = false;
+            bool retVal = true; //set to false if an error occurs during the transaction
 
             using (var context = new EstimeContext(connString))
             {
                 using (var trans = context.Database.BeginTransaction())
                 {
                     DbCommand cmd = context.Database.GetDbConnection().CreateCommand();
+                    if (context.Database.CurrentTransaction != null)
+                        cmd.Transaction = context.Database.CurrentTransaction.GetDbTransaction();
                     try
                     {
                         //first insert metadata points
@@ -166,25 +169,6 @@ namespace ESTIME.DAL
                         rpId.Value = refPeriodId;
                         cmd.Parameters.Add(rpId);
 
-                        //DataTable paramTable = new DataTable();
-                        //paramTable.Columns.Add("Val1", typeof(string));
-                        //paramTable.Columns.Add("Val2", typeof(string));
-                        //DataRow row;
-
-                        //foreach (KeyValuePair<string, string> val in paramVals)
-                        //{
-                        //    row = paramTable.NewRow();
-                        //    row["Val1"] = val.Key;
-                        //    row["Val2"] = val.Value;
-                        //    paramTable.Rows.Add(row);
-                        //}
-                        //SqlParameter valPairParam = new SqlParameter("@ParamVarValue", SqlDbType.Structured)
-                        //{
-                        //    Value = paramTable,
-                        //    TypeName = "ESTIME.ValuePair"
-                        //};
-                        //cmd.Parameters.Add(valPairParam);
-
                         //output parameters
                         DbParameter success = cmd.CreateParameter();
                         success.ParameterName = "@SuccessCode";
@@ -201,17 +185,18 @@ namespace ESTIME.DAL
 
                         if (cmd.Connection.State != ConnectionState.Open)
                         { cmd.Connection.Open(); }
+                        
                         cmd.ExecuteNonQuery();
                         cmd.Connection.Close();
 
-                        bool spRet = (bool)success.Value;
+                        //value of 0 indicates success, all other values represent error
+                        bool spRet = (success.Value.Equals(0) ? true : false);
 
                         if (spRet)
                         {
                             context.TdLoadData.AddRange(newLoadData);
                             context.SaveChanges();
                         }
-                        trans.Commit();
                     }
                     catch (Exception ex)
                     {
@@ -220,7 +205,6 @@ namespace ESTIME.DAL
                     finally
                     {
                         cmd.Connection.Close();
-                        trans.Commit();
                     }
                 }
             }

@@ -21,7 +21,7 @@ namespace ESTIME.BusinessLibrary
     {
         protected readonly IDataLoaderDal dal;
         private TlEstimeFileType estimeFileType;
-        private int refPeriodId =0;//temp, change
+        private int refPeriodId;
         private TdLoad curLoad;
         ExcelPackage ws;
         private bool loadSuccess;
@@ -63,71 +63,47 @@ namespace ESTIME.BusinessLibrary
             try
             {
                 //estimeFileType = dal.GetEstimeFileTypeId("3");
-                //if (estimeFileType.FileType.Extension == ".txt" || estimeFileType.FileType.Extension == ".csv")
-                //{
+                if (estimeFileType.FileType.Extension == ".txt" || estimeFileType.FileType.Extension == ".csv")
+                {
                     //loading text file
-                    //loadSuccess = dal.LoadTextDataFileByBulk(curLoad.Id, refPeriodId);
+                    loadSuccess = dal.LoadTextDataFileByBulk(curLoad.Id, refPeriodId);
 
                     //new code to construct the loadStagings list from the text file
                     //To test, comment the call above and uncomment the code below
-                    //List<TdLoadStaging> loadStagings = new List<TdLoadStaging>();
-                    //loadSuccess = dal.AddTdLoadStaging(curLoad.Id, refPeriodId, loadStagings);
-                //}
-                //else if (estimeFileType.FileType.Extension == ".xlsx")
-                //{
-                    //loading excel file
-                    //if (ws == null)
-                    //{
-                        //loadErr = "Empty Worksheet!";
-                        //loadSuccess = false;
-                    //}
-                    //else
-                    //{
-
-                        List<TlInputCoordinate> inputCoordinates = dal.GetInputCoordinateListByEstimeFileType(estimeFileType.Id).ToList();
-
-                        //use the input coordinates to converte the data in ws to a list of TdLoadData
-                        List<TdLoadData> myData = new List<TdLoadData>();
-
-
-                var fi = new FileInfo(filePath);
-                //var fi = new FileInfo(@"C:\Users\Claire\Desktop\ESTIME\test.xlsx");
-                using (ws = new ExcelPackage(fi))
+                    List<TdLoadStaging> loadStagings = new List<TdLoadStaging>();
+                    loadSuccess = dal.AddTdLoadStaging(curLoad.Id, refPeriodId, loadStagings);
+                }
+                else if (estimeFileType.FileType.Extension == ".xlsx")
                 {
-                    var sheet = ws.Workbook.Worksheets[1];
-                    inputCoordinates.ForEach(delegate (TlInputCoordinate coord)
-                                    {
-                                        int rowNum = coord.RowNumber ?? -1;
+                    //loading excel file
+                    List<TlInputCoordinate> inputCoordinates = dal.GetInputCoordinateListByEstimeFileType(estimeFileType.Id).ToList();
 
-                                       
-
-                                        int colNum = coord.ColumnNumber;
-
-                                        String val = sheet.Cells[rowNum, colNum].Value.ToString();
-
-                                        myData.Add(new TdLoadData(curLoad.Id, coord.RecordNumber, coord.InputVariableId,
-                                            refPeriodId, val));
-
-                                        //Console.WriteLine(coord);
-                                    });
+                    //use the input coordinates to converte the data in ws to a list of TdLoadData
+                    List<TdLoadData> myData = new List<TdLoadData>();
 
 
-                    //[h, 8]
-                    var v = sheet.Cells[10, 8].Value;
+                    var fi = new FileInfo(filePath);
+                    using (ws = new ExcelPackage(fi))
+                    {
+                        var sheet = ws.Workbook.Worksheets[estimeFileType.SheetNumber ?? 1];
+                        inputCoordinates.ForEach(delegate (TlInputCoordinate coord)
+                                        {
+                                            int rowNum = coord.RowNumber ?? -1;
 
-                    //dal.AddTdLoadData(curLoad.Id, refPeriodId, myData);
+
+                                            int colNum = coord.ColumnNumber;
+
+                                            String val = sheet.Cells[rowNum, colNum].Value.ToString();
+
+                                            myData.Add(new TdLoadData(curLoad.Id, coord.RecordNumber, coord.InputVariableId,
+                                                refPeriodId, val));
+                                        });
+
+                    }
+                    //Add new data and save to database
+                    loadSuccess = dal.AddTdLoadData(curLoad.Id, refPeriodId, myData);
 
                 }
-
-
-
-
-
-
-                //Add new data and save to database
-                loadSuccess = dal.AddTdLoadData(curLoad.Id, refPeriodId, myData);
-                    //}
-                //}
                 return loadSuccess;
             }
             catch (Exception e)
