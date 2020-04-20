@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace ESTIME.DAL.EstimeEntity
 {
-    public class TdLoadData
+    public partial class TdLoadData
     {
         public long Id { get; set; }
         public int LoadId { get; set; }
@@ -15,14 +15,5 @@ namespace ESTIME.DAL.EstimeEntity
         public TlInputVariable InputVariable { get; set; }
         public TdLoad Load { get; set; }
         public TcRefPeriod RefPeriod { get; set; }
-
-        public TdLoadData(int loadId, int recordNumber, int inputVariableId, int refPeriodId, string variableValue)
-        {
-            LoadId = loadId;
-            RecordNumber = recordNumber;
-            InputVariableId = inputVariableId;
-            RefPeriodId = refPeriodId;
-            VariableValue = variableValue;
-        }
     }
 }
