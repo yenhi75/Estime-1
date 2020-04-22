@@ -26,6 +26,7 @@ namespace ESTIME.BusinessLibrary
         ExcelPackage ws;
         private bool loadSuccess;
         private string loadErr = string.Empty;
+        private List<TdLoadStaging> newStagings = new List<TdLoadStaging>();
 
         public DataLoaderManager(IConfiguration config)
             : 
@@ -65,13 +66,16 @@ namespace ESTIME.BusinessLibrary
                 //estimeFileType = dal.GetEstimeFileTypeId("3");
                 if (estimeFileType.FileType.Extension == ".txt" || estimeFileType.FileType.Extension == ".csv")
                 {
-                    //loading text file
-                    loadSuccess = dal.LoadTextDataFileByBulk(curLoad.Id, refPeriodId);
+                    //Read loading text file into tdLoadStaging object
+                    loadSuccess = ReadTextFile();
 
-                    //new code to construct the loadStagings list from the text file
-                    //To test, comment the call above and uncomment the code below
-                    List<TdLoadStaging> loadStagings = new List<TdLoadStaging>();
-                    loadSuccess = dal.AddTdLoadStaging(curLoad.Id, refPeriodId, loadStagings);
+                    //save tdLoadStaging object to staging table
+
+                    if (loadSuccess)
+                    {
+                       loadSuccess= dal.AddTdLoadStaging(curLoad.Id, refPeriodId, newStagings);
+                    }
+
                 }
                 else if (estimeFileType.FileType.Extension == ".xlsx")
                 {
@@ -167,6 +171,40 @@ namespace ESTIME.BusinessLibrary
             }
         }
 
+        public bool ReadTextFile()
+        {
+
+            String FileName = curLoad.FilePath + estimeFileType.FileType.Extension;
+            using (StreamReader file = new StreamReader(FileName))
+            {
+                //file = new StreamReader(curLoad.FilePath + estimeFileType.FileType.Extension);
+
+                int LineNumber = 0;
+                string ln;
+
+
+                while ((ln = file.ReadLine()) != null)
+                {
+                    TdLoadStaging newLoad = new TdLoadStaging(curLoad.Id, ++LineNumber, ln);
+                    //{
+                    //    LoadId = curLoad.Id,
+                    //    RecordId = ++LineNumber,
+                    //    RecordValue = ln
+                    //};
+
+                    newStagings.Add(newLoad);
+
+                }
+                file.Close();
+                if (LineNumber == 0)
+                {
+                    loadErr = FileName + " is empty!";
+                    return false;
+                }
+
+            }
+            return true;
+        }
 
 
     }
